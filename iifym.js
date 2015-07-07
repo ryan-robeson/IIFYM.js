@@ -71,6 +71,70 @@
     return exerciseLevels[el];
   };
 
+  // lbsToKg() converts pounds to kilograms
+  // Accepts a value in pounds
+  // Returns a value in kilograms
+  var lbsToKg = function(pounds) {
+    return pounds / 2.20462;
+  };
+
+  // inToCm() converts inches to centimeters
+  // Accepts a value in inches
+  // Returns a value in centimeters
+  var inToCm = function(inches) {
+    return inches / 0.393701;
+  };
+
+  // bmr() calculates the Basal Metabolic Rate (BMR) for an individual.
+  //
+  // This is the function to call if you're only intrested in the BMR.
+  // If you're interested in the TDEE and macro breakdown, see calculate().
+  //
+  // Can accept the same data object as calculate(), but does not require every field.
+  //
+  // Example:
+  // {
+  //   {
+  //     'gender': 'male',           // Required if using Mifflin-St Jeor
+  //     'age': 22,                  // Required if using Mifflin-St Jeor
+  //     'isMetric': false,          // Provide metric inputs? (cm, kg)
+  //     'ft': 5,                    // Required if using Mifflin-St Jeor and isMetric == false
+  //     'in': 10,                   // Required if using Mifflin-St Jeor and isMetric == false
+  //     'cm': null,                 // Required if using Mifflin-St Jeor and isMetric == true
+  //     'lbs': 170,                 // Required if isMetric == false
+  //     'kg': null,                 // Required if isMetric == true
+  //     'mifflinStJeor': true,      // True for lean individuals, false for overweight
+  //     'bodyFatPercentage': null,  // Required if not using Mifflin-St Jeor
+  //   }
+  // }
+  //
+  // Returns the BMR as an integer.
+  exports.bmr = function(data) {
+    var height = data['isMetric'] === true ? data['cm'] : inToCm(data['ft'] * 12.0 + data['in']);
+    var weight = data['isMetric'] === true ? data['kg'] : lbsToKg(data['lbs']);
+    var age = data['age'];
+
+    var bmr = null;
+
+    if (data['mifflinStJeor']) {
+      // Calculate BMR with Mifflin-St Jeor
+
+      // Mifflin-St Jeor only differs between male and female by a single
+      // integer adjustment
+      var modifier = data['gender'] === 'male' ? 5.0 : -161.0;
+
+      // Calculate the BMR according to Mifflin-St Jeor and round to the nearest integer.
+      // BMR = [10 x weight(kg)] + [6.25 x height(cm)] - [5 x age(yrs)] + modifier
+      bmr = Math.round((10.0 * weight) + (6.25 * height) - (5.0 * age) + modifier);
+    } else {
+      // Calculate BMR with Katch-McArdle, round to the nearest integer.
+      // BMR = 370 + [21.6 x lean mass(kg)]
+      bmr = Math.round(370 + (21.6 * (weight - (weight * data['bodyFatPercentage']))))
+    }
+
+    return bmr
+  };
+
   // calculate() is the main function for iifym.js
   //
   // It accepts an object(data) that contains all of the details necessary to
@@ -100,6 +164,7 @@
   // Example result:
   // {
   //   {
+  //     'bmr': 1779,     // BMR with no modifiers
   //     'tdee': 2568,    // TDEE including goal modifier
   //     'protein': 119,  // Protein grams per day
   //     'fat': 59.5,     // Fat grams per day
