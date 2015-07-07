@@ -1,0 +1,27 @@
+{
+  "name": "iifym.js",
+  "version": "0.0.1",
+  "description": "A library for performing the necessary calculations for the If It Fits Your Macros(IIFYM) diet.",
+  "main": "iifym.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "mocha": "^2.2.5",
+    "karma": "^0.12.37",
+    "chai": "^3.0.0",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^0.2.0",
+    "karma-mocha": "^0.2.0"
+  },
+  "scripts": {
+    "test": "karma start"
+  },
+  "keywords": [
+    "iifym"
+  ],
+  "author": "Ryan Robeson",
+  "license": "MIT"
+}
