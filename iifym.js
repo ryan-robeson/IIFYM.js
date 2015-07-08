@@ -92,8 +92,10 @@
   //
   // Can accept the same data object as calculate(), but does not require every field.
   //
+  // Returns the BMR as an integer.
+  //
   // Example:
-  // {
+  // bmr({
   //   'gender': 'male',           // Required if using Mifflin-St Jeor
   //   'age': 22,                  // Required if using Mifflin-St Jeor
   //   'isMetric': false,          // Provide metric inputs? (cm, kg)
@@ -104,9 +106,9 @@
   //   'kg': null,                 // Required if isMetric == true
   //   'mifflinStJeor': true,      // True for lean individuals, false for overweight
   //   'bodyFatPercentage': null,  // Required if not using Mifflin-St Jeor
-  // }
+  // });
   //
-  // Returns the BMR as an integer.
+  // => 1779
   exports.bmr = function(data) {
     var height = data['isMetric'] === true ? data['cm'] : inToCm(data['ft'] * 12.0 + data['in']);
     var weight = data['isMetric'] === true ? data['kg'] : lbsToKg(data['lbs']);
@@ -143,19 +145,60 @@
   // Accepts a data object with every field from bmr(), along with a field for
   // exerciseLevel.
   //
+  // Returns the initial TDEE as an integer
+  //
   // Example:
-  // {
+  // tdee({
   //  same fields as bmr()... ,
   //  exerciseLevel: 2 // An integer from 0 to 9 specifying the exercise level
   //                   // of the individual.
   //                   // See exerciseLevelActivityMultiplier().
-  // }
+  // });
   //
-  // Returns the initial TDEE as an integer
+  // => 2446
   exports.tdee = function(data) {
     // The TDEE is derived from the BMR and an activity multiplier.
     // TDEE = BMR * activity multiplier
     return Math.round(exports.bmr(data) * exerciseLevelActivityMultiplier(data['exerciseLevel']));
+  };
+
+  // tdeeGoal() calculates the TDEE for an individual and adjusts it to a
+  // particular goal.
+  //
+  // This is useful if you only want to know how many calories to consume to
+  // gain or lose weight and aren't interested in the macro breakdown.
+  // Otherwise, see calculate().
+  //
+  // Accepts a data object with every field from tdee(), along with a 'goal' field.
+  //
+  // The initial TDEE will be multiplied with the goal to produce the goal
+  // TDEE. For example, 1.05 will result in a 5% increase in the TDEE (useful
+  // for light bulking). Likewise, 0.85 will result in a 15% decrease in the
+  // TDEE (useful for light cutting). The goal can be any decimal, however it
+  // is recommended to remain between 0.75 and 1.15 unless you are aware of the
+  // consequences.
+  //
+  // ==========================================================================
+  //                             Recommended Values
+  // ==========================================================================
+  // |                               0.75 | Fat Loss, Reckless                | 
+  // |                               0.80 | Fat Loss, Aggressive              | 
+  // |                               0.85 | Fat Loss, Suggested               | 
+  // |                               1.00 | Maintain                          | 
+  // |                               1.05 | Weight Gain, Cautious             | 
+  // |                               1.10 | Weight Gain, Textbook             | 
+  // |                               1.15 | Weight Gain, Aggressive           | 
+  // ==========================================================================
+  //
+  // Example:
+  // tdeeGoal({
+  //   same fields as tdee... ,
+  //   goal: 1.05
+  // });
+  //
+  // => 2568
+  exports.tdeeGoal = function(data) {
+    return Math.round(exports.tdee(data) * data['goal']);
   };
 
   // calculate() is the main function for iifym.js
@@ -164,8 +207,8 @@
   // calculate the macros and TDEE of an individual.
   // It returns this information as an object.
   //
-  // Example argument:
-  // {
+  // Example:
+  // calculate({
   //   'gender': 'male',           // Required if using Mifflin-St Jeor
   //   'age': 22,                  // Required if using Mifflin-St Jeor
   //   'isMetric': false,          // Provide metric inputs? (cm, kg)
@@ -180,17 +223,16 @@
   //   'goal': 1.05,               // TDEE Modifier. Recommended: Maintain(1.0), Cut(0.85 or 0.8), Bulk(1.05 or 1.1)
   //   'protein': 0.7,             // Protein grams per lb of body weight. Recommend: 0.7, 0.8, or 0.9
   //   'fat': 0.35                 // Fat grams per lb of body weight. Recommend: 0.3, 0.35, or 0.4
-  // }
+  // });
   //
-  // Example result:
-  // {
-  //   'bmr': 1779,         // BMR with no modifiers
-  //   'initialTdee': 2446, // TDEE without goal modifier
-  //   'tdee': 2568,        // TDEE with goal modifier
-  //   'protein': 119,      // Protein grams per day
-  //   'fat': 59.5,         // Fat grams per day
-  //   'carbs': 389.1       // Carb grams per day
-  // }
+  // => {
+  //      'bmr': 1779,         // BMR with no modifiers
+  //      'initialTdee': 2446, // TDEE without goal modifier
+  //      'tdee': 2568,        // TDEE with goal modifier
+  //      'protein': 119,      // Protein grams per day
+  //      'fat': 59.5,         // Fat grams per day
+  //      'carbs': 389.1       // Carb grams per day
+  //    }
   exports.calculate = function(data) {
   };
 

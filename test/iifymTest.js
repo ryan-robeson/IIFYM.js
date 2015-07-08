@@ -27,7 +27,7 @@ var testData = [
   // Katch-McArdle
   {
     given: { 'gender': 'male', 'age': 20, 'isMetric': true, 'ft': null, 'in': null, 'cm': 152, 'lbs': null, 'kg': 81.65, 'mifflinStJeor': false, 'exerciseLevel': 2, 'bodyFatPercentage': 0.60, 'goal': 0.85, 'protein': 0.7, 'fat': 0.35 },
-    expected: { 'bmr': 1075, 'initialTdee': 1479, 'tdee': 1437, 'protein': 50.3, 'fat': 25.1, 'carbs': 252.4 }
+    expected: { 'bmr': 1075, 'initialTdee': 1479, 'tdee': 1256, 'protein': 50.3, 'fat': 25.1, 'carbs': 252.4 }
   },
 ];
 
@@ -53,6 +53,15 @@ describe('tdee()', function() {
     it('returns the correct TDEE for the individual (' + i + ')', function() {
       // Allow +/- 10 calories. See bmr() test.
       expect(iifym.tdee(d.given)).to.be.within(d.expected['initialTdee'] - 10, d.expected['initialTdee'] + 10);
+    });
+  });
+});
+
+describe('tdeeGoal()', function() {
+  testData.forEach(function(d, i) {
+    it('returns the correct TDEE adjusted to the specified goal of the individual (' + i + ')', function() {
+      // Allow +/- 10 calories. See bmr() test.
+      expect(iifym.tdeeGoal(d.given)).to.be.within(d.expected['tdee'] - 10, d.expected['tdee'] + 10);
     });
   });
 });
