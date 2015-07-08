@@ -78,11 +78,25 @@
     return pounds / 2.20462;
   };
 
+  // kgToLbs() converts kilograms to pounds
+  // Accepts a value in kilograms
+  // Returns a value in pounds
+  var kgToLbs = function(kilograms) {
+    return kilograms * 2.20462;
+  };
+
   // inToCm() converts inches to centimeters
   // Accepts a value in inches
   // Returns a value in centimeters
   var inToCm = function(inches) {
     return inches / 0.393701;
+  };
+
+  // cmToIn() converts centimeters to inches
+  // Accepts a value in centimeters
+  // Returns a value in inches
+  var cmToIn = function(centimeters) {
+    return centimeters * 0.393701;
   };
 
   // bmr() calculates the Basal Metabolic Rate (BMR) for an individual.
@@ -176,7 +190,7 @@
   // consequences.
   //
   // ==========================================================================
-  //                             Recommended Values
+  // |                           Recommended Values                           |
   // ==========================================================================
   // |                               0.75 | Fat Loss, Reckless                | 
   // |                               0.80 | Fat Loss, Aggressive              | 
@@ -228,9 +242,42 @@
   //      'carbs': 389.1       // Carb grams per day
   //    }
   exports.calculate = function(data) {
-  };
+    // Go ahead and calculate the BMR, TDEE, and goal TDEE.
+    var bmr      = exports.bmr(data),
+        tdee     = exports.tdee(bmr, data['exerciseLevel']),
+        tdeeGoal = exports.tdeeGoal(tdee, data['goal']);
 
-  exports.theAnswer = function() {
-    return 42;
+    // Macros are broken down based on percentage per pound
+    // rather than kilogram like the other formulas.
+    var weightLbs = data['isMetric'] === true ? kgToLbs(data['kg']) : data['lbs'];
+
+    // When using Katch-McArdle, calories are broken down my lean mass, not
+    // pure body weight.
+    if (data['mifflinStJeor'] === false) {
+      weightLbs = weightLbs - weightLbs * data['bodyFatPercentage'];
+    }
+
+    // protein = % grams per lb * weight in lbs 
+    // (or lean mass for Katch-McArdle)
+    // protein = % grams per lb * lean mass in lbs 
+    var protein = data['protein'] * weightLbs;
+
+    // fat = % grams per lb * weight in lbs
+    // (or lean mass for Katch-McArdle)
+    // fat = % grams per lb * lean mass in lbs
+    var fat = data['fat'] * weightLbs;
+
+    // carbs = (tdee goal - calories from protein - calories from fat) / 4
+    // carbs = (tdee goal - grams of protein * 4 - grams of fat * 9) / 4
+    var carbs = (tdeeGoal - protein * 4.0 - fat * 9.0) / 4.0
+
+    return {
+      'bmr': bmr,
+      'initialTdee': tdee,
+      'tdee': tdeeGoal,
+      'protein': protein,
+      'fat': fat,
+      'carbs': carbs
+    }
   };
 })(typeof exports === 'undefined' ? this['iifym']={} : exports);

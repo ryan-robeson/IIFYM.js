@@ -27,15 +27,9 @@ var testData = [
   // Katch-McArdle
   {
     given: { 'gender': 'male', 'age': 20, 'isMetric': true, 'ft': null, 'in': null, 'cm': 152, 'lbs': null, 'kg': 81.65, 'mifflinStJeor': false, 'exerciseLevel': 2, 'bodyFatPercentage': 0.60, 'goal': 0.85, 'protein': 0.7, 'fat': 0.35 },
-    expected: { 'bmr': 1075, 'initialTdee': 1479, 'tdee': 1256, 'protein': 50.3, 'fat': 25.1, 'carbs': 252.4 }
+    expected: { 'bmr': 1075, 'initialTdee': 1479, 'tdee': 1256, 'protein': 50.3, 'fat': 25.1, 'carbs': 206.9 }
   },
 ];
-
-describe('sample', function() {
-  it('returns 42', function() {
-    assert.equal(iifym.theAnswer(), 42);
-  });
-});
 
 describe('bmr()', function() {
   testData.forEach(function(d, i) {
@@ -75,3 +69,28 @@ describe('tdeeGoal()', function() {
     });
   });
 });
+
+ describe('calculate()', function() {
+   testData.forEach(function(d, i) {
+     var results = iifym.calculate(d.given);
+
+     // Allow +/- 10 calories. See bmr() test.
+     ['bmr', 'initialTdee', 'tdee'].forEach(function(key) {
+       describe('result["' + key + '"] (' + i + ')', function() {
+         it('returns the correct value for ' + key, function() { 
+           expect(results[key]).to.be.within(d.expected[key] - 10, d.expected[key] + 10);
+         });
+       });
+     });
+
+     // Allow +/- 1.5 grams. Since the calories might be off, the
+     // grams could be too.
+     ['protein', 'fat', 'carbs'].forEach(function(key) {
+       describe('result["' + key + '"] (' + i + ')', function() {
+         it('returns the correct amount of ' + key, function() {
+           expect(results[key]).to.be.within(d.expected[key] - 1.5, d.expected[key] + 1.5);
+         });
+       });
+     });
+   });
+ });
