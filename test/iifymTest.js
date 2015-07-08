@@ -24,6 +24,10 @@ var testData = [
     given: { 'gender': 'male', 'age': 20, 'isMetric': true, 'ft': null, 'in': null, 'cm': 152, 'lbs': null, 'kg': 81.65, 'mifflinStJeor': true, 'exerciseLevel': 2, 'bodyFatPercentage': null, 'goal': 1.05, 'protein': 0.7, 'fat': 0.35 },
     expected: { 'bmr': 1672, 'initialTdee': 2298, 'tdee': 2413, 'protein': 125.7, 'fat': 62.9, 'carbs': 336.1 }
   },
+  {
+    given: { 'gender': 'female', 'age': 17, 'isMetric': true, 'ft': null, 'in': null, 'cm': 165 , 'lbs': null, 'kg': 58.51, 'mifflinStJeor': true, 'exerciseLevel': 2, 'bodyFatPercentage': null, 'goal': 1.05, 'protein': 0.7, 'fat': 0.35 },
+    expected: { 'bmr': 1372, 'initialTdee': 1887, 'tdee': 1981, 'protein': 90.3, 'fat': 45.2, 'carbs': 303.4 }
+  },
   // Katch-McArdle
   {
     given: { 'gender': 'male', 'age': 20, 'isMetric': true, 'ft': null, 'in': null, 'cm': 152, 'lbs': null, 'kg': 81.65, 'mifflinStJeor': false, 'exerciseLevel': 2, 'bodyFatPercentage': 0.60, 'goal': 0.85, 'protein': 0.7, 'fat': 0.35 },
