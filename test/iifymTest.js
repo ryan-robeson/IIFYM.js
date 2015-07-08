@@ -52,7 +52,8 @@ describe('tdee()', function() {
   testData.forEach(function(d, i) {
     it('returns the correct TDEE for the individual (' + i + ')', function() {
       // Allow +/- 10 calories. See bmr() test.
-      expect(iifym.tdee(d.given)).to.be.within(d.expected['initialTdee'] - 10, d.expected['initialTdee'] + 10);
+      expect(iifym.tdee(iifym.bmr(d.given), d.given['exerciseLevel']))
+        .to.be.within(d.expected['initialTdee'] - 10, d.expected['initialTdee'] + 10);
     });
   });
 });
@@ -61,7 +62,16 @@ describe('tdeeGoal()', function() {
   testData.forEach(function(d, i) {
     it('returns the correct TDEE adjusted to the specified goal of the individual (' + i + ')', function() {
       // Allow +/- 10 calories. See bmr() test.
-      expect(iifym.tdeeGoal(d.given)).to.be.within(d.expected['tdee'] - 10, d.expected['tdee'] + 10);
+      //
+      // This is getting ugly, but it could be simplified the same way that the API
+      // is expected to be simplified in the real world, by assigning each step to a
+      // variable to avoid redoing work.
+      //
+      // Also, the calculate() method is going to do something similar to this to
+      // simplify things for users when they want the full breakdown.
+      expect(iifym.tdeeGoal(iifym.tdee(iifym.bmr(d.given), d.given['exerciseLevel']),
+                            d.given['goal']))
+        .to.be.within(d.expected['tdee'] - 10, d.expected['tdee'] + 10);
     });
   });
 });

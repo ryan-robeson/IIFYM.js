@@ -142,24 +142,21 @@
   // of an individual. If you want the actual TDEE based on a cutting or
   // bulking goal and calorie breakdown, see calculate().
   //
-  // Accepts a data object with every field from bmr(), along with a field for
-  // exerciseLevel.
+  // Accepts a BMR and an exercise level.
   //
   // Returns the initial TDEE as an integer
   //
   // Example:
-  // tdee({
-  //  same fields as bmr()... ,
-  //  exerciseLevel: 2 // An integer from 0 to 9 specifying the exercise level
+  // tdee(bmr(data), 2 // An integer from 0 to 9 specifying the exercise level
   //                   // of the individual.
   //                   // See exerciseLevelActivityMultiplier().
-  // });
+  // );
   //
   // => 2446
-  exports.tdee = function(data) {
+  exports.tdee = function(bmr, el) {
     // The TDEE is derived from the BMR and an activity multiplier.
     // TDEE = BMR * activity multiplier
-    return Math.round(exports.bmr(data) * exerciseLevelActivityMultiplier(data['exerciseLevel']));
+    return Math.round(bmr * exerciseLevelActivityMultiplier(el));
   };
 
   // tdeeGoal() calculates the TDEE for an individual and adjusts it to a
@@ -169,7 +166,7 @@
   // gain or lose weight and aren't interested in the macro breakdown.
   // Otherwise, see calculate().
   //
-  // Accepts a data object with every field from tdee(), along with a 'goal' field.
+  // Accepts a TDEE along with a 'goal' field.
   //
   // The initial TDEE will be multiplied with the goal to produce the goal
   // TDEE. For example, 1.05 will result in a 5% increase in the TDEE (useful
@@ -191,14 +188,11 @@
   // ==========================================================================
   //
   // Example:
-  // tdeeGoal({
-  //   same fields as tdee... ,
-  //   goal: 1.05
-  // });
+  // tdeeGoal(tdee, 1.05);
   //
   // => 2568
-  exports.tdeeGoal = function(data) {
-    return Math.round(exports.tdee(data) * data['goal']);
+  exports.tdeeGoal = function(tdee, goal) {
+    return Math.round(tdee * goal);
   };
 
   // calculate() is the main function for iifym.js
