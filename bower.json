@@ -1,0 +1,28 @@
+{
+  "name": "iifym.js",
+  "main": "iifym.js",
+  "version": "0.0.0",
+  "authors": [
+    "Ryan Robeson <ryan.robeson@gmail.com>"
+  ],
+  "description": "A small library for calculating the calorie and macro breakdown for the If It Fits Your Macros diet.",
+  "moduleType": [
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "iifym",
+    "calorie",
+    "diet"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "app/bower_components",
+    "test",
+    "tests",
+    "karma.conf.json"
+  ]
+}
