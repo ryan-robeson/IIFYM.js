@@ -13,7 +13,9 @@
   "keywords": [
     "iifym",
     "calorie",
-    "diet"
+    "diet",
+    "BMR",
+    "TDEE"
   ],
   "license": "MIT",
   "ignore": [
