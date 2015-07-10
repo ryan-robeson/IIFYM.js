@@ -36,6 +36,104 @@
 // var iifym = require ('./iifym');
 // console.log(iifym.callAMethod());
 (function(exports) {
+  // Validation
+  // The validate object contains all of the functions necessary to ensure sane
+  // user input. 
+  //
+  // When validation fails, an object will be returned containing the name of
+  // the field and a useful error message.  This object can be manipulated as
+  // appropriate.  Null is returned on success.
+  var validate = {};
+
+  validate.gender = function(mifflinStJeor, gender) {
+    // Gender is only required and validated for Mifflin-St Jeor
+    if (mifflinStJeor === true) {
+      if (typeof gender === 'undefined') {
+        return { name: "gender", message: "A gender must be given [male or female]" };
+      }
+
+      if (gender !== 'male' && gender !== 'female') {
+        return { name: "gender", message: "Invalid gender selected [male or female]" };
+      }
+    }
+
+    return null;
+  };
+
+  validate.age = function(mifflinStJeor, age) {
+    // Age is only required and validated for Mifflin-St Jeor
+    if (mifflinStJeor === true) {
+      if (typeof age === 'undefined') {
+        return { name: "age", message: "An age must be given [0-105]" };
+      }
+
+      if (age < 0 || age > 105) {
+        return { name: "age", message: "Invalid age given [0-105]" };
+      }
+    }
+
+    return null;
+  };
+
+  validate.isMetric = function(isMetric) {
+    if (typeof isMetric === 'undefined') {
+      return { name: "isMetric", message: "isMetric must be given [true or false]" };
+    }
+
+    if (typeof isMetric !== 'boolean') {
+      return { name: "isMetric", message: "isMetric must be a boolean [true or false]" };
+    }
+
+    return null;
+  };
+
+  validate.height = function(isMetric, mifflinStJeor, feet, inches, cm) {
+    if (mifflinStJeor === true) {
+      var result = { name: "height" };
+
+      if (isMetric === true) {
+        if (typeof cm === 'undefined') {
+          result.message = "cm must be given when isMetric is true and mifflinStJeor is true";
+          return result;
+        }
+
+        if (cm < 0) {
+          result.message = "cm must be greater than 0";
+          return result;
+        }
+      } else {
+        if (typeof feet === 'undefined' && typeof inches === 'undefined') {
+          result.message = "ft or in [or both] must be given when isMetric is false and mifflinStJeor is true";
+          return result;
+        } else {
+          if (typeof feet !== 'undefined' && feet < 0) {
+            result.message = "ft must be greater than 0. ";
+          }
+
+          if (typeof inches !== 'undefined' && inches < 0) {
+            result.message += "in must be greater than 0.";
+          }
+
+          if (typeof result.message !== 'undefined') {
+            result.message = result.message.trim();
+            return result;
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  validate.bmr = function(data) {
+    var invalidProperties = [];
+    invalidProperties.push(validate.gender(data['mifflinStJeor'], data['gender']));
+    invalidProperties.push(validate.age(data['mifflinStJeor'], data['age']));
+    invalidProperties.push(validate.isMetric(data['isMetric']));
+    invalidProperties.push(validate.height(data['isMetric'], data['mifflinStJeor'], data['ft'], data['in'], data['cm']));
+
+    return invalidProperties.filter(function(el) { return el !== null });
+  };
 
   // exerciseLevelActivityMultiplier() returns the activity mulitplier
   // associated with the given exercise level.
@@ -124,6 +222,15 @@
   //
   // => 1779
   exports.bmr = function(data) {
+    // Validate inputs
+    var err = new Error();
+    err.invalidProperties = validate.bmr(data);
+
+    if (err.invalidProperties.length !== 0) {
+      err.message = "ArgumentError: Invalid properties - " + err.invalidProperties.map(function(el) { return el.message }).join(', ');
+      throw err;
+    }
+
     var height = data['isMetric'] === true ? data['cm'] : inToCm(data['ft'] * 12.0 + data['in']);
     var weight = data['isMetric'] === true ? data['kg'] : lbsToKg(data['lbs']);
     var age = data['age'];
