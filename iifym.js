@@ -41,19 +41,21 @@
   // user input. 
   //
   // When validation fails, an object will be returned containing the name of
-  // the field and a useful error message.  This object can be manipulated as
-  // appropriate.  Null is returned on success.
+  // the category of the data (gender, age, height, etc.), an array of the
+  // field names that failed validation (e.g. [ "ft", "in" ]), and a useful
+  // error message.  This object can be manipulated as appropriate.  Null is
+  // returned on success.
   var validate = {};
 
   validate.gender = function(mifflinStJeor, gender) {
     // Gender is only required and validated for Mifflin-St Jeor
     if (mifflinStJeor === true) {
-      if (typeof gender === 'undefined') {
-        return { name: "gender", message: "A gender must be given [male or female]" };
+      if (gender == null) {
+        return { name: "gender", fields: [ "gender" ], message: "A gender must be given [male or female]" };
       }
 
       if (gender !== 'male' && gender !== 'female') {
-        return { name: "gender", message: "Invalid gender selected [male or female]" };
+        return { name: "gender", fields: [ "gender" ], message: "Invalid gender selected [male or female]" };
       }
     }
 
@@ -63,12 +65,12 @@
   validate.age = function(mifflinStJeor, age) {
     // Age is only required and validated for Mifflin-St Jeor
     if (mifflinStJeor === true) {
-      if (typeof age === 'undefined') {
-        return { name: "age", message: "An age must be given [0-105]" };
+      if (age == null) {
+        return { name: "age", fields: [ "age" ], message: "An age must be given [0-105]" };
       }
 
       if (age < 0 || age > 105) {
-        return { name: "age", message: "Invalid age given [0-105]" };
+        return { name: "age", fields: [ "age" ], message: "Invalid age given [0-105]" };
       }
     }
 
@@ -76,12 +78,12 @@
   };
 
   validate.isMetric = function(isMetric) {
-    if (typeof isMetric === 'undefined') {
-      return { name: "isMetric", message: "isMetric must be given [true or false]" };
+    if (isMetric == null) {
+      return { name: "isMetric", fields: [ "isMetric" ], message: "isMetric must be given [true or false]" };
     }
 
     if (typeof isMetric !== 'boolean') {
-      return { name: "isMetric", message: "isMetric must be a boolean [true or false]" };
+      return { name: "isMetric", fields: [ "isMetric" ], message: "isMetric must be a boolean [true or false]" };
     }
 
     return null;
@@ -89,32 +91,41 @@
 
   validate.height = function(isMetric, mifflinStJeor, feet, inches, cm) {
     if (mifflinStJeor === true) {
-      var result = { name: "height" };
+      var result = { name: "height", fields: [] };
 
       if (isMetric === true) {
-        if (typeof cm === 'undefined') {
+        if (cm == null) {
+          result.fields.push("cm");
           result.message = "cm must be given when isMetric is true and mifflinStJeor is true";
           return result;
         }
 
         if (cm < 0) {
+          result.fields.push("cm");
           result.message = "cm must be greater than 0";
           return result;
         }
       } else {
-        if (typeof feet === 'undefined' && typeof inches === 'undefined') {
+        if (feet == null && inches == null) {
+          result.fields.push("ft", "in");
           result.message = "ft or in [or both] must be given when isMetric is false and mifflinStJeor is true";
           return result;
         } else {
-          if (typeof feet !== 'undefined' && feet < 0) {
+          if (feet != null && feet < 0) {
+            result.fields.push("ft");
             result.message = "ft must be greater than 0. ";
+            // Don't return because inches may be negative too
           }
 
-          if (typeof inches !== 'undefined' && inches < 0) {
+          if (inches != null && inches < 0) {
+            result.fields.push("in");
             result.message += "in must be greater than 0.";
+            // Don't return because inches may have been valid while feet was
+            // not
           }
 
           if (typeof result.message !== 'undefined') {
+            // If feet and/or inches were invalid, return the results
             result.message = result.message.trim();
             return result;
           }
@@ -125,12 +136,45 @@
     return null;
   }
 
+  validate.weight = function(isMetric, lbs, kg) {
+    var result = { name: "weight", fields: [] };
+
+    if (isMetric === true) {
+      if (kg == null) {
+        result.fields.push('kg');
+        result.message = 'kg must be given when isMetric is true';
+        return result;
+      }
+
+      if (kg < 0) {
+        result.fields.push('kg');
+        result.message = 'kg must be greater than 0';
+        return result;
+      }
+    } else {
+      if (lbs == null) {
+        result.fields.push('lbs');
+        result.message = 'lbs must be given when isMetric is false';
+        return result;
+      }
+
+      if (lbs < 0) {
+        result.fields.push('lbs');
+        result.message = 'lbs must be greater than 0';
+        return result;
+      }
+    }
+
+    return null;
+  };
+
   validate.bmr = function(data) {
     var invalidProperties = [];
     invalidProperties.push(validate.gender(data['mifflinStJeor'], data['gender']));
     invalidProperties.push(validate.age(data['mifflinStJeor'], data['age']));
     invalidProperties.push(validate.isMetric(data['isMetric']));
     invalidProperties.push(validate.height(data['isMetric'], data['mifflinStJeor'], data['ft'], data['in'], data['cm']));
+    invalidProperties.push(validate.weight(data['isMetric'], data['lbs'], data['kg']));
 
     return invalidProperties.filter(function(el) { return el !== null });
   };
