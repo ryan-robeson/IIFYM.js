@@ -73,6 +73,9 @@ var throwErrorWithNullOrUndefinedValue = function(required, obj, key, func, erro
   var keyAsString = key;
   var keyIsArray = false;
 
+  // Allow messageSuffix to be omitted
+  typeof messageSuffix === 'undefined' ? messageSuffix = '' : null;
+
   if (Array.isArray(key)) {
     keyIsArray = true;
     keyAsString = key.join(' AND ');
@@ -273,6 +276,46 @@ describe('bmr()', function() {
           data.given['lbs'] = -1;
           expect(function() { iifym.bmr(data.given) }).to.throw(Error, /lbs must be greater than 0/);
         });
+      });
+    });
+
+    describe('(mifflinStJeor)', function() {
+      mustThrowErrorWithNullOrUndefinedValue(imperialMaleMSJData().given, 'mifflinStJeor', iifym.bmr, /mifflinStJeor must be given/);
+
+      it('throws an Error when mifflinStJeor is invalid', function() {
+        var data = imperialMaleMSJData();
+        data.given['mifflinStJeor'] = "hey";
+        expect(function() { iifym.bmr(data.given) }).to.throw(Error, /mifflinStJeor must be a boolean/);
+      });
+    });
+
+    describe('(bodyFatPercentage)', function() {
+      mustNotThrowErrorWithNullOrUndefinedValue(imperialMaleMSJData().given, 'bodyFatPercentage', iifym.bmr, ' using Mifflin-St Jeor');
+
+      it('does not throw an Error when bodyFatPercentage is negative using Mifflin-St Jeor', function() {
+        var data = imperialMaleMSJData();
+        data.given['bodyFatPercentage'] = -1;
+        expect(function() { iifym.bmr(data.given) }).to.not.throw(Error);
+      });
+
+      it('does not throw an Error when bodyFatPercentage is greater than 1 using Mifflin-St Jeor', function() {
+        var data = imperialMaleMSJData();
+        data.given['bodyFatPercentage'] = 1.2;
+        expect(function() { iifym.bmr(data.given) }).to.not.throw(Error);
+      });
+
+      mustThrowErrorWithNullOrUndefinedValue(imperialMaleKMData().given, 'bodyFatPercentage', iifym.bmr, /bodyFatPercentage must be given/, ' using Katch-McArdle');
+
+      it('throws an Error when bodyFatPercentage is negative using Katch-McArdle', function() {
+        var data = imperialMaleKMData();
+        data.given['bodyFatPercentage'] = -1;
+        expect(function() { iifym.bmr(data.given) }).to.throw(Error, /bodyFatPercentage must be between 0 and 1/);
+      });
+
+      it('throws an Error when bodyFatPercentage is greater than 1 using Katch-McArdle', function() {
+        var data = imperialMaleKMData();
+        data.given['bodyFatPercentage'] = 1.2;
+        expect(function() { iifym.bmr(data.given) }).to.throw(Error, /bodyFatPercentage must be between 0 and 1/);
       });
     });
   });

@@ -168,13 +168,49 @@
     return null;
   };
 
+  validate.mifflinStJeor = function(mifflinStJeor) {
+    result = { name: 'mifflinStJeor', fields: ['mifflinStJeor'] };
+
+    if (mifflinStJeor == null) {
+      result.message = 'mifflinStJeor must be given';
+      return result;
+    }
+
+    if (typeof mifflinStJeor !== 'boolean') {
+      result.message = 'mifflinStJeor must be a boolean';
+      return result;
+    }
+
+    return null;
+  };
+
+  validate.bodyFatPercentage = function(mifflinStJeor, bodyFatPercentage) {
+    if (mifflinStJeor === false) {
+      var result = { name: "bodyFatPercentage", fields: "bodyFatPercentage" };
+
+      if (bodyFatPercentage == null) {
+        result.message = "bodyFatPercentage must be given when mifflinStJeor is false";
+        return result;
+      }
+
+      if (bodyFatPercentage < 0 || bodyFatPercentage > 1) {
+        result.message = "bodyFatPercentage must be between 0 and 1";
+        return result;
+      }
+    }
+
+    return null;
+  };
+
   validate.bmr = function(data) {
     var invalidProperties = [];
+    invalidProperties.push(validate.mifflinStJeor(data['mifflinStJeor']));
     invalidProperties.push(validate.gender(data['mifflinStJeor'], data['gender']));
     invalidProperties.push(validate.age(data['mifflinStJeor'], data['age']));
     invalidProperties.push(validate.isMetric(data['isMetric']));
     invalidProperties.push(validate.height(data['isMetric'], data['mifflinStJeor'], data['ft'], data['in'], data['cm']));
     invalidProperties.push(validate.weight(data['isMetric'], data['lbs'], data['kg']));
+    invalidProperties.push(validate.bodyFatPercentage(data['mifflinStJeor'], data['bodyFatPercentage']));
 
     return invalidProperties.filter(function(el) { return el !== null });
   };
