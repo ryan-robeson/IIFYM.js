@@ -381,6 +381,40 @@ describe('tdeeGoal()', function() {
         .to.be.within(d.expected['tdee'] - 10, d.expected['tdee'] + 10);
     });
   });
+
+  describe('Validation for', function() {
+    describe('(tdee)', function() {
+      it('throws an Error when tdee is null', function() {
+        expect(function() { iifym.tdeeGoal(null, 0.15) }).to.throw(Error, /tdee must be given/);
+      });
+
+      it('throws an Error when tdee is undefined', function() {
+        expect(function() { iifym.tdeeGoal(undefined, 0.15) }).to.throw(Error, /tdee must be given/);
+      });
+
+      it('throws an Error when tdee is negative', function() {
+        expect(function() { iifym.tdeeGoal(-100, 0.15) }).to.throw(Error, /tdee must be greater than 0/);
+      });
+    });
+
+    describe('(goal)', function() {
+      it('throws an Error when goal is null', function() {
+        expect(function() { iifym.tdeeGoal(2200, null) }).to.throw(Error, /goal must be given/);
+      });
+
+      it('throws an Error when goal is undefined', function() {
+        expect(function() { iifym.tdeeGoal(2200, undefined) }).to.throw(Error, /goal must be given/);
+      });
+
+      it('throws an Error when goal is less than 0.25', function() {
+        expect(function() { iifym.tdeeGoal(2200, 0.24) }).to.throw(Error, /goal must be between 0.25 and 3.0 \[0.75 to 1.15 recommended\]/);
+      });
+
+      it('throws an Error when goal is greater than 3.0', function() {
+        expect(function() { iifym.tdeeGoal(2200, 3.1) }).to.throw(Error, /goal must be between 0.25 and 3.0 \[0.75 to 1.15 recommended\]/);
+      });
+    });
+  });
 });
 
  describe('calculate()', function() {

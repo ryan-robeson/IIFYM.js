@@ -260,6 +260,20 @@
     return null;
   };
 
+  validate.goal = function(goal) {
+    var result = validate.util.mustBeGiven(goal, 'goal', 'goal');
+
+    if (result == null) {
+      result = validate.util.mustBePositive(goal, 'goal', 'goal');
+
+      if (result == null && (goal < 0.25 || goal > 3.0)) {
+        result = { name: 'goal', fields: ['goal'], message: 'goal must be between 0.25 and 3.0 [0.75 to 1.15 recommended]' };
+      }
+    }
+
+    return result;
+  };
+
   validate.bmr = function(data) {
     var invalidProperties = [];
     invalidProperties.push(validate.mifflinStJeor(data['mifflinStJeor']));
@@ -289,6 +303,24 @@
       return result;
     }());
 
+    return invalidProperties.filter(function(el) { return el !== null });
+  };
+  
+  validate.tdeeGoal = function(tdee, goal) {
+    var invalidProperties = [];
+    invalidProperties.push(function() {
+      // Similar case to validate.tdee
+      // Using an anonymous function is more straightforward.
+      var result = validate.util.mustBeGiven(tdee, 'tdee', 'tdee');
+      
+      if (result == null) {
+        result = validate.util.mustBePositive(tdee, 'tdee', 'tdee');
+      }
+      
+      return result;
+    }());
+    invalidProperties.push(validate.goal(goal));
+    
     return invalidProperties.filter(function(el) { return el !== null });
   };
 
@@ -444,7 +476,6 @@
     // Validate exerciseLevelActivityMultiplier
     var elMultiplier = exerciseLevelActivityMultiplier(el);
     if (elMultiplier == null) {
-      err = new Error();
       err.invalidProperties = [ { name: 'exerciseLevel', fields: ['exerciseLevel'], message: 'exerciseLevel is invalid' } ];
       err.message = 'ArgumentError: Invalid properties - exerciseLevel is invalid [Index Out of Range]';
       throw err;
@@ -462,7 +493,10 @@
   // gain or lose weight and aren't interested in the macro breakdown.
   // Otherwise, see calculate().
   //
-  // Accepts a TDEE along with a 'goal' field.
+  // Accepts a TDEE along with a 'goal' field. Goal must be between 0.25 and
+  // 3.0, which as mentioned below, is a much larger range than is really
+  // practical. However, in the interest of being as flexible as possible, this
+  // range is allowed.
   //
   // The initial TDEE will be multiplied with the goal to produce the goal
   // TDEE. For example, 1.05 will result in a 5% increase in the TDEE (useful
@@ -488,6 +522,15 @@
   //
   // => 2568
   exports.tdeeGoal = function(tdee, goal) {
+    // Validate inputs
+    var err = new Error();
+    err.invalidProperties = validate.tdeeGoal(tdee, goal);
+
+    if (err.invalidProperties.length !== 0) {
+      err.message = "ArgumentError: Invalid properties - " + err.invalidProperties.map(function(el) { return el.message }).join(', ');
+      throw err;
+    }
+
     return Math.round(tdee * goal);
   };
 
