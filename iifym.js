@@ -47,6 +47,47 @@
   // returned on success.
   var validate = {};
 
+  // Utility functions for validation
+  validate.util = {};
+
+  validate.util.presence = function(prop) {
+    if (prop == null) {
+      return false;
+    }
+
+    return true;
+  };
+
+  validate.util.isPositive = function(prop) {
+    if (prop > 0) {
+      return true;
+    }
+    
+    return false;
+  };
+
+  validate.util.mustBeGiven = function(prop, name, field) {
+    var result = { name: name, fields: [ field ] };
+
+    if (validate.util.presence(prop) === false) {
+      result.message = name + " must be given";
+      return result;
+    }
+
+    return null;
+  };
+
+  validate.util.mustBePositive = function(prop, name, field) {
+    var result = { name: name, fields: [ field ] };
+
+    if (validate.util.isPositive(prop) === false) {
+      result.message = name + " must be greater than 0";
+      return result;
+    }
+
+    return null;
+  };
+
   validate.gender = function(mifflinStJeor, gender) {
     // Gender is only required and validated for Mifflin-St Jeor
     if (mifflinStJeor === true) {
@@ -202,6 +243,23 @@
     return null;
   };
 
+  validate.exerciseLevel = function(exerciseLevel) {
+    var result = { name: 'exerciseLevel', fields: ['exerciseLevel'] };
+
+    if (exerciseLevel == null) {
+      result.message = "exerciseLevel must be given";
+      return result;
+    }
+
+
+    if (exerciseLevel < 0) {
+      result.message = "exerciseLevel must be greater than 0";
+      return result;
+    }
+
+    return null;
+  };
+
   validate.bmr = function(data) {
     var invalidProperties = [];
     invalidProperties.push(validate.mifflinStJeor(data['mifflinStJeor']));
@@ -211,6 +269,25 @@
     invalidProperties.push(validate.height(data['isMetric'], data['mifflinStJeor'], data['ft'], data['in'], data['cm']));
     invalidProperties.push(validate.weight(data['isMetric'], data['lbs'], data['kg']));
     invalidProperties.push(validate.bodyFatPercentage(data['mifflinStJeor'], data['bodyFatPercentage']));
+
+    return invalidProperties.filter(function(el) { return el !== null });
+  };
+
+  validate.tdee = function(bmr, el) {
+    var invalidProperties = [];
+    invalidProperties.push(validate.exerciseLevel(el));
+    invalidProperties.push(function() {
+      // Use an anonymous function to validate bmr
+      // for TDEE since validate.bmr already exists,
+      // and this is a simple validation.
+      var result = validate.util.mustBeGiven(bmr, 'bmr', 'bmr');
+
+      if (result == null) {
+        result = validate.util.mustBePositive(bmr, 'bmr', 'bmr');
+      }
+
+      return result;
+    }());
 
     return invalidProperties.filter(function(el) { return el !== null });
   };
@@ -355,9 +432,27 @@
   //
   // => 2446
   exports.tdee = function(bmr, el) {
+    // Validate inputs
+    var err = new Error();
+    err.invalidProperties = validate.tdee(bmr, el);
+
+    if (err.invalidProperties.length !== 0) {
+      err.message = "ArgumentError: Invalid properties - " + err.invalidProperties.map(function(el) { return el.message }).join(', ');
+      throw err;
+    }
+
+    // Validate exerciseLevelActivityMultiplier
+    var elMultiplier = exerciseLevelActivityMultiplier(el);
+    if (elMultiplier == null) {
+      err = new Error();
+      err.invalidProperties = [ { name: 'exerciseLevel', fields: ['exerciseLevel'], message: 'exerciseLevel is invalid' } ];
+      err.message = 'ArgumentError: Invalid properties - exerciseLevel is invalid [Index Out of Range]';
+      throw err;
+    }
+
     // The TDEE is derived from the BMR and an activity multiplier.
     // TDEE = BMR * activity multiplier
-    return Math.round(bmr * exerciseLevelActivityMultiplier(el));
+    return Math.round(bmr * elMultiplier);
   };
 
   // tdeeGoal() calculates the TDEE for an individual and adjusts it to a

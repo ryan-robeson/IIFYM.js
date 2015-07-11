@@ -329,6 +329,40 @@ describe('tdee()', function() {
         .to.be.within(d.expected['initialTdee'] - 10, d.expected['initialTdee'] + 10);
     });
   });
+
+  describe('Validation for', function() {
+    describe('(bmr)', function() {
+      it('throws an Error when bmr is null', function() {
+        expect(function() { iifym.tdee(null, 2) }).to.throw(Error, /bmr must be given/);
+      });
+
+      it('throws an Error when bmr is undefined', function() {
+        expect(function() { iifym.tdee(undefined, 2) }).to.throw(Error, /bmr must be given/);
+      });
+
+      it('throws an Error when bmr is negative', function() {
+        expect(function() { iifym.tdee(-200, 2) }).to.throw(Error, /bmr must be greater than 0/);
+      });
+    });
+
+    describe('(exerciseLevel)', function() {
+      it('throws an Error when exerciseLevel is null', function() {
+        expect(function() { iifym.tdee(1680, null) }).to.throw(Error, /exerciseLevel must be given/);
+      });
+
+      it('throws an Error when exerciseLevel is undefined', function() {
+        expect(function() { iifym.tdee(1680, undefined) }).to.throw(Error, /exerciseLevel must be given/);
+      });
+
+      it('throws an Error when exerciseLevel is negative', function() {
+        expect(function() { iifym.tdee(1680, -1) }).to.throw(Error, /exerciseLevel must be greater than 0/);
+      });
+
+      it('throws an Error when exerciseLevel is invalid', function() {
+        expect(function() { iifym.tdee(1680, 20) }).to.throw(Error, /exerciseLevel is invalid/);
+      });
+    });
+  });
 });
 
 describe('tdeeGoal()', function() {
