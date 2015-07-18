@@ -417,27 +417,50 @@ describe('tdeeGoal()', function() {
   });
 });
 
- describe('calculate()', function() {
-   testData.forEach(function(d, i) {
-     var results = iifym.calculate(d.given);
+describe('macros()', function() {
+  testData.forEach(function(d, i) {
+    // macros() is not currently expected to perform metric conversions or lean
+    // mass calculations. So, in the interest of laziness, skip all the data
+    // that is in metric.  Theoretically, this isn't a problem because it is
+    // still tested in at least the calculate() function. However, if it
+    // becomes an issue, this test case can be made more thorough.
+    if (d.given['isMetric'] === false && d.given['mifflinStJeor'] === true) {
+      var results = iifym.macros(d.expected['tdee'], d.given['lbs'], d.given['protein'], d.given['fat']);
 
-     // Allow +/- 10 calories. See bmr() test.
-     ['bmr', 'initialTdee', 'tdee'].forEach(function(key) {
-       describe('result["' + key + '"] (' + i + ')', function() {
-         it('returns the correct value for ' + key, function() { 
-           expect(results[key]).to.be.within(d.expected[key] - 10, d.expected[key] + 10);
-         });
+      // Allow +/- 1.5 grams. Since the calories might be off, the
+      // grams could be too.
+      ['protein', 'fat', 'carbs'].forEach(function(key) {
+        describe('results["' + key + '"] (' + i + ')', function() {
+          it('returns the correct amount of ' + key, function() {
+            expect(results[key]).to.be.within(d.expected[key] - 1.5, d.expected[key] + 1.5);
+          });
+        });
+      });
+    }
+  });
+});
+
+describe('calculate()', function() {
+ testData.forEach(function(d, i) {
+   var results = iifym.calculate(d.given);
+
+   // Allow +/- 10 calories. See bmr() test.
+   ['bmr', 'initialTdee', 'tdee'].forEach(function(key) {
+     describe('results["' + key + '"] (' + i + ')', function() {
+       it('returns the correct value for ' + key, function() { 
+         expect(results[key]).to.be.within(d.expected[key] - 10, d.expected[key] + 10);
        });
      });
+   });
 
-     // Allow +/- 1.5 grams. Since the calories might be off, the
-     // grams could be too.
-     ['protein', 'fat', 'carbs'].forEach(function(key) {
-       describe('result["' + key + '"] (' + i + ')', function() {
-         it('returns the correct amount of ' + key, function() {
-           expect(results[key]).to.be.within(d.expected[key] - 1.5, d.expected[key] + 1.5);
-         });
+   // Allow +/- 1.5 grams. Since the calories might be off, the
+   // grams could be too.
+   ['protein', 'fat', 'carbs'].forEach(function(key) {
+     describe('results["' + key + '"] (' + i + ')', function() {
+       it('returns the correct amount of ' + key, function() {
+         expect(results[key]).to.be.within(d.expected[key] - 1.5, d.expected[key] + 1.5);
        });
      });
    });
  });
+});

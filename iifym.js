@@ -324,6 +324,20 @@
     return invalidProperties.filter(function(el) { return el !== null });
   };
 
+  // round() is a simple function for rounding a number to a given number of
+  // decimal places.  In the interest of keeping it simple, it currently
+  // expects valid input and should only be used internally.
+  //
+  // See: http://www.jacklmoore.com/notes/rounding-in-javascript/
+  // And: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/round
+  //
+  // Example:
+  // round(1.005, 2)
+  // => 1.01
+  var round = function(value, decimals) {
+    return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+  };
+
   // exerciseLevelActivityMultiplier() returns the activity mulitplier
   // associated with the given exercise level.
   // 
@@ -534,6 +548,49 @@
     return Math.round(tdee * goal);
   };
 
+  // macros() calculates the appropriate number of grams of protein, fat, and
+  // carbs based on the goal TDEE, the person's weight in pounds, and the
+  // desired percentage of protein and fat (represented as decimals).
+  //
+  // tdeeGoal is an integer representing the goal TDEE.
+  // lbs is the person's weight (or lean mass if using Katch-McArdle)  in pounds.
+  //     It is used as given, so any necessary preprocessing such as unit conversions
+  //     or lean mass calculations should be done prior to passing this value to macros().
+  // protein is the desired percentage of protein per pound as a decimal.
+  // fat is the desired percentage of fat per pound as a decimal.
+  //
+  // Returns the number of grams of protein, fat, and carbs in grams
+  // rounded to 1 decimal point stored in an object.
+  //
+  // Example:
+  // macros(2568, 170, 0.7, 0.35)
+  // => {
+  //      'protein': 119,
+  //      'fat': 59.5,
+  //      'carbs': 389.1
+  //    }
+  exports.macros = function(tdeeGoal, lbs, protein, fat) {
+    // protein = % grams per lb * weight in lbs 
+    // (or lean mass for Katch-McArdle)
+    // protein = % grams per lb * lean mass in lbs 
+    var p = protein * lbs;
+
+    // fat = % grams per lb * weight in lbs
+    // (or lean mass for Katch-McArdle)
+    // fat = % grams per lb * lean mass in lbs
+    var f = fat * lbs;
+
+    // carbs = (tdee goal - calories from protein - calories from fat) / 4
+    // carbs = (tdee goal - grams of protein * 4 - grams of fat * 9) / 4
+    var c = (tdeeGoal - p * 4.0 - f * 9.0) / 4.0;
+
+    return {
+      'protein': round(p, 1),
+      'fat': round(f, 1),
+      'carbs': round(c, 1)
+    };
+  };
+
   // calculate() is the main function for iifym.js
   //
   // It accepts an object(data) that contains all of the details necessary to
@@ -582,27 +639,16 @@
       weightLbs = weightLbs - weightLbs * data['bodyFatPercentage'];
     }
 
-    // protein = % grams per lb * weight in lbs 
-    // (or lean mass for Katch-McArdle)
-    // protein = % grams per lb * lean mass in lbs 
-    var protein = data['protein'] * weightLbs;
-
-    // fat = % grams per lb * weight in lbs
-    // (or lean mass for Katch-McArdle)
-    // fat = % grams per lb * lean mass in lbs
-    var fat = data['fat'] * weightLbs;
-
-    // carbs = (tdee goal - calories from protein - calories from fat) / 4
-    // carbs = (tdee goal - grams of protein * 4 - grams of fat * 9) / 4
-    var carbs = (tdeeGoal - protein * 4.0 - fat * 9.0) / 4.0
+    // Now we have enough data to calculate macros.
+    var macros = exports.macros(tdeeGoal, weightLbs, data['protein'], data['fat']);
 
     return {
       'bmr': bmr,
       'initialTdee': tdee,
       'tdee': tdeeGoal,
-      'protein': protein,
-      'fat': fat,
-      'carbs': carbs
-    }
+      'protein': macros['protein'],
+      'fat': macros['fat'],
+      'carbs': macros['carbs']
+    };
   };
 })(typeof exports === 'undefined' ? this['iifym']={} : exports);
