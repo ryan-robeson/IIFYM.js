@@ -667,6 +667,14 @@
   // calculate the macros and TDEE of an individual.
   // It returns this information as an object.
   //
+  // If you want to avoid recalculating values each time an input changes, in
+  // an interactive calculator for example, you can use the source of this
+  // function to understand the steps involved. For instance, if someone
+  // changes their protein goal, it is possible to recalculate their macros
+  // without recalculating their BMR, TDEE, and TDEE goal. Again, this is
+  // something you must implement yourself, but you can use the calculate()
+  // function's source as a guide.
+  //
   // Example:
   // calculate({
   //   'gender': 'male',           // Required if using Mifflin-St Jeor
