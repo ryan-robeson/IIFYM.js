@@ -66,6 +66,44 @@
     return false;
   };
 
+  validate.util.isBetween = function(prop, start, end) {
+    if (prop >= start && prop <= end) {
+      return true;
+    }
+
+    return false;
+  };
+
+  // Short-circuiting AND that returns the first failed validation
+  // result or null on success.
+  //
+  // Arguments should be functions that return results as an object described
+  // above.
+  validate.util.and = function(/*arguments*/) {
+    // Nothing was given, so validation can't fail.
+    if (arguments.length == 0) {
+      return null;
+    }
+
+    // With only one argument, the result is simply the result of
+    // the first argument.
+    if (arguments.length == 1) {
+      return arguments[0].call();
+    }
+
+    // With multiple arguments, each argument must be evaluated until
+    // one fails or they have all been checked.
+    if (arguments.length > 1) {
+      var result = arguments[0].call();
+
+      for(var i = 1; i < arguments.length && result == null; i++) {
+        result = arguments[i].call();
+      }
+
+      return result;
+    }
+  };
+
   validate.util.mustBeGiven = function(prop, name, field) {
     var result = { name: name, fields: [ field ] };
 
@@ -82,6 +120,17 @@
 
     if (validate.util.isPositive(prop) === false) {
       result.message = name + " must be greater than 0";
+      return result;
+    }
+
+    return null;
+  };
+
+  validate.util.mustBeBetween = function(prop, start, end, name) {
+    var result = { name: name, fields: [ name ] };
+
+    if (validate.util.isBetween(prop, start, end) === false) {
+      result.message = name + " must be between " + start + " and " + end;
       return result;
     }
 
@@ -290,36 +339,48 @@
   validate.tdee = function(bmr, el) {
     var invalidProperties = [];
     invalidProperties.push(validate.exerciseLevel(el));
-    invalidProperties.push(function() {
-      // Use an anonymous function to validate bmr
-      // for TDEE since validate.bmr already exists,
-      // and this is a simple validation.
-      var result = validate.util.mustBeGiven(bmr, 'bmr', 'bmr');
-
-      if (result == null) {
-        result = validate.util.mustBePositive(bmr, 'bmr', 'bmr');
-      }
-
-      return result;
-    }());
+    invalidProperties.push(validate.util.and(
+          function() { return validate.util.mustBeGiven(bmr, 'bmr', 'bmr'); },
+          function() { return validate.util.mustBePositive(bmr, 'bmr', 'bmr'); }));
 
     return invalidProperties.filter(function(el) { return el !== null });
   };
   
   validate.tdeeGoal = function(tdee, goal) {
     var invalidProperties = [];
-    invalidProperties.push(function() {
-      // Similar case to validate.tdee
-      // Using an anonymous function is more straightforward.
-      var result = validate.util.mustBeGiven(tdee, 'tdee', 'tdee');
-      
-      if (result == null) {
-        result = validate.util.mustBePositive(tdee, 'tdee', 'tdee');
-      }
-      
-      return result;
-    }());
+    invalidProperties.push(validate.util.and(
+          function() { return validate.util.mustBeGiven(tdee, 'tdee', 'tdee'); },
+          function() { return validate.util.mustBePositive(tdee, 'tdee', 'tdee'); }));
+
     invalidProperties.push(validate.goal(goal));
+    
+    return invalidProperties.filter(function(el) { return el !== null });
+  };
+
+  validate.macros = function(tdeeGoal, lbs, protein, fat) {
+    var invalidProperties = [];
+
+    // TDEE Goal must be given and positive
+    invalidProperties.push(validate.util.and(
+          function() { return validate.util.mustBeGiven(tdeeGoal, 'tdeeGoal', 'tdeeGoal'); },
+          function() { return validate.util.mustBePositive(tdeeGoal, 'tdeeGoal', 'tdeeGoal'); }));
+
+    // lbs must be given and positive
+    invalidProperties.push(validate.util.and(
+          function() { return validate.util.mustBeGiven(lbs, 'lbs', 'lbs'); },
+          function() { return validate.util.mustBePositive(lbs, 'lbs', 'lbs'); }));
+
+    // protein must be given, positive, and between 0 and 3
+    invalidProperties.push(validate.util.and(
+          function() { return validate.util.mustBeGiven(protein, 'protein', 'protein'); },
+          function() { return validate.util.mustBePositive(protein, 'protein', 'protein'); },
+          function() { return validate.util.mustBeBetween(protein, 0, 3, 'protein'); }));
+
+    // fat must be given, positive, and between 0 and 3
+    invalidProperties.push(validate.util.and(
+          function() { return validate.util.mustBeGiven(fat, 'fat', 'fat'); },
+          function() { return validate.util.mustBePositive(fat, 'fat', 'fat'); },
+          function() { return validate.util.mustBeBetween(fat, 0, 3, 'fat'); }));
     
     return invalidProperties.filter(function(el) { return el !== null });
   };
@@ -570,6 +631,15 @@
   //      'carbs': 389.1
   //    }
   exports.macros = function(tdeeGoal, lbs, protein, fat) {
+    // Validate inputs
+    var err = new Error();
+    err.invalidProperties = validate.macros(tdeeGoal, lbs, protein, fat);
+
+    if (err.invalidProperties.length !== 0) {
+      err.message = "ArgumentError: Invalid properties - " + err.invalidProperties.map(function(el) { return el.message }).join(', ');
+      throw err;
+    }
+
     // protein = % grams per lb * weight in lbs 
     // (or lean mass for Katch-McArdle)
     // protein = % grams per lb * lean mass in lbs 

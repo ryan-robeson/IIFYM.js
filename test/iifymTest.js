@@ -438,6 +438,72 @@ describe('macros()', function() {
       });
     }
   });
+
+  describe('Validation for', function() {
+    describe('(tdeeGoal)', function() {
+      it('throws an Error when tdeeGoal is null', function() {
+        expect(function() { iifym.macros(null, 200, 0.7, 0.35) }).to.throw(Error, /tdeeGoal must be given/);
+      });
+
+      it('throws an Error when tdeeGoal is undefined', function() {
+        expect(function() { iifym.macros(undefined, 200, 0.7, 0.35) }).to.throw(Error, /tdeeGoal must be given/);
+      });
+
+      it('throws an Error when tdeeGoal is less than 0', function() {
+        expect(function() { iifym.macros(-2000, 200, 0.7, 0.35) }).to.throw(Error, /tdeeGoal must be greater than 0/);
+      });
+    });
+
+    describe('(lbs)', function() {
+      it('throws an Error when lbs is null', function() {
+        expect(function() { iifym.macros(2200, null, 0.7, 0.35) }).to.throw(Error, /lbs must be given/);
+      });
+
+      it('throws an Error when lbs is undefined', function() {
+        expect(function() { iifym.macros(2200, undefined, 0.7, 0.35) }).to.throw(Error, /lbs must be given/);
+      });
+
+      it('throws an Error when lbs is less than 0', function() {
+        expect(function() { iifym.macros(2200, -200, 0.7, 0.35) }).to.throw(Error, /lbs must be greater than 0/);
+      });
+    });
+
+    describe('(protein)', function() {
+      it('throws an Error when protein is null', function() {
+        expect(function() { iifym.macros(2200, 200, null, 0.35) }).to.throw(Error, /protein must be given/);
+      });
+
+      it('throws an Error when protein is undefined', function() {
+        expect(function() { iifym.macros(2200, 200, undefined, 0.35) }).to.throw(Error, /protein must be given/);
+      });
+
+      it('throws an Error when protein is less than 0', function() {
+        expect(function() { iifym.macros(2200, 200, -1, 0.35) }).to.throw(Error, /protein must be greater than 0/);
+      });
+
+      it('throws an Error when protein is greater than 3', function() {
+        expect(function() { iifym.macros(2200, 200, 3.2, 0.35) }).to.throw(Error, /protein must be between 0 and 3/);
+      });
+    });
+
+    describe('(fat)', function() {
+      it('throws an Error when fat is null', function() {
+        expect(function() { iifym.macros(2200, 200, 0.7, null) }).to.throw(Error, /fat must be given/);
+      });
+
+      it('throws an Error when fat is undefined', function() {
+        expect(function() { iifym.macros(2200, 200, 0.7, undefined) }).to.throw(Error, /fat must be given/);
+      });
+
+      it('throws an Error when fat is less than 0', function() {
+        expect(function() { iifym.macros(2200, 200, 0.7, -1) }).to.throw(Error, /fat must be greater than 0/);
+      });
+
+      it('throws an Error when fat is greater than 3', function() {
+        expect(function() { iifym.macros(2200, 200, 0.7, 3.2) }).to.throw(Error, /fat must be between 0 and 3/);
+      });
+    });
+  });
 });
 
 describe('calculate()', function() {
