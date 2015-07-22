@@ -296,6 +296,11 @@ Here's the basic idea:
 
 ## Changelog
 
+* v1.0.0 - ISHIS (I Sure Hope It's Stable)
+    * As promised, a stable version with error handling.
+    * The test suite now tests that validation is performed correctly.
+    * A new `macros()` function is available so that `calculate()` doesn't need
+      to be called when input changes in interactive interfaces.
 * v0.9.0 - Initial Public Release
     * This is the first release to be officially tagged and published.
       I decided to spend a couple days putting this library together while I have the time and motivation.
