@@ -214,6 +214,39 @@ iifym.calculate(data);
 // }
 ```
 
+## Error Handling
+
+After much deliberation and research, I decided to go with try..catch style
+thrown errors. The exported functions are all synchronous and, from what I
+could find, the Node community tends toward throwing errors with synchronous
+functions. I tried to make things as straightforward as possible. Each function
+validates it's arguments and could throw an Error object that includes an
+`invalidProperties` property containing an array of objects that provide more
+detailed information. The error message is built based on the messages of the
+`invalidProperties` objects. This should provide a unified means of dealing
+with any errors that may come up. It should also simplify tying
+errors to specific form elements in interactive uses.
+
+```js
+// For example, passing a negative value for bmr to tdee()
+iifym.tdee(-200, 2);
+// Uncaught Error: ArgumentError: Invalid properties - bmr must be greater than 0
+
+// Inspecting the error object
+try {
+  iifym.tdee(-200, 2);
+}
+catch (e) {
+  console.dir(e.invalidProperties[0]);
+  // Object
+  //   fields: Array[1]
+  //     0: "bmr"
+  //     length: 1
+  //   message: "bmr must be greater than 0"
+  //   name: "bmr"
+}
+```
+
 ## Purpose
 
 While there are several online IIFYM calculators, I have yet to find one that
